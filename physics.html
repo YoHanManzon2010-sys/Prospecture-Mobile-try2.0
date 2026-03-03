@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Chemistry Quiz</title>
+
+<style>
+/* ===== YOUR UI (UNCHANGED) ===== */
+body{
+  margin:0;
+  font-family:'Segoe UI', sans-serif;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  overflow:hidden;
+  background:black;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  width:200%;
+  height:200%;
+  background:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(#00d4ff 1px, transparent 1px),
+    radial-gradient(#7b2ff7 1px, transparent 1px);
+  background-size:100px 100px, 150px 150px, 200px 200px;
+  animation:moveStars 60s linear infinite;
+  opacity:0.3;
+}
+
+@keyframes moveStars{
+  from{transform:translate(0,0);}
+  to{transform:translate(-500px,-500px);}
+}
+
+.quiz-container{width:900px;text-align:center;z-index:1;}
+.counter{font-size:20px;margin-bottom:20px;}
+.question-box{
+  padding:50px;margin-bottom:50px;border-radius:40px;
+  border:3px solid #00d4ff;box-shadow:0 0 30px #00d4ff;
+  background:rgba(255,255,255,0.05);font-size:28px;
+}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+.option{
+  padding:25px;font-size:20px;border-radius:40px;
+  border:2px solid #7b2ff7;cursor:pointer;transition:0.3s;
+  background:rgba(255,255,255,0.05);
+}
+.option:hover{transform:scale(1.05);}
+.correct{ background:#00c853 !important; }
+.wrong{ background:#d50000 !important; }
+
+.back-btn{
+position:absolute;left:20px;top:18px;width:60px;height:60px;
+border-radius:50%;border:none;background:rgba(255,255,255,0.12);
+color:#fff;font-size:36px;cursor:pointer;z-index:10;
+display:flex;align-items:center;justify-content:center;transition:0.3s;
+}
+.back-btn:hover{transform:scale(1.1);}
+
+.final-screen{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:black;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+}
+.final-screen h1{ font-size:50px; }
+.final-screen h2{ font-size:30px; }
+.rank{ font-size:28px;margin-top:10px;color:#00d4ff; }
+.final-buttons{ margin-top:40px; }
+.final-buttons button{
+  margin:10px;padding:15px 40px;font-size:18px;
+  border-radius:40px;border:none;cursor:pointer;
+}
+.retake{ background: linear-gradient(45deg, #00d4ff, #7b2ff7); color: black; }
+.home{ background: linear-gradient(45deg, #7b2ff7, #00d4ff); color: white; }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .quiz-container {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .counter {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  
+  .question-box {
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 25px;
+    font-size: 20px;
+  }
+  
+  .options {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .option {
+    padding: 18px;
+    font-size: 16px;
+    border-radius: 25px;
+  }
+  
+  .back-btn {
+    left: 10px;
+    top: 10px;
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-container {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  .question-box {
+    padding: 18px;
+    margin-bottom: 20px;
+    border-radius: 20px;
+    font-size: 16px;
+  }
+  
+  .option {
+    padding: 14px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+  
+  .counter {
+    font-size: 14px;
+  }
+  
+  .back-btn {
+    left: 8px;
+    top: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .final-screen h1 {
+    font-size: 32px;
+  }
+  
+  .final-screen h2 {
+    font-size: 20px;
+  }
+  
+  .rank {
+    font-size: 20px;
+  }
+  
+  .final-buttons button {
+    padding: 12px 25px;
+    font-size: 14px;
+    margin: 8px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .option:hover {
+    transform: none;
+  }
+  
+  .option:active {
+    transform: scale(0.98);
+  }
+}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="window.location.href='science.html'">←</button>
+
+<div class="quiz-container">
+  <div class="counter" id="counter"></div>
+  <div class="question-box" id="question"></div>
+  <div class="options" id="options"></div>
+</div>
+
+<script>
+
+// ✅ IMPORTANT — DEFINE STORAGE KEY
+const highScoreKey = "physicsHighScore";
+
+const questionBank = [
+{q:"Unit of force?",a:["Newton","Joule","Volt","Watt"],correct:0},
+{q:"Energy of motion?",a:["Potential","Kinetic","Thermal","Chemical"],correct:1},
+{q:"Speed = distance divided by?",a:["Time","Mass","Force","Energy"],correct:0},
+{q:"Force that slows motion?",a:["Friction","Gravity","Magnetism","Tension"],correct:0},
+{q:"SI unit of energy?",a:["Joule","Newton","Volt","Ampere"],correct:0},
+{q:"Acceleration is change in?",a:["Velocity","Mass","Energy","Force"],correct:0},
+{q:"Object at rest stays at rest due to?",a:["Inertia","Gravity","Energy","Magnetism"],correct:0},
+{q:"Speed of light is fastest in?",a:["Vacuum","Water","Air","Glass"],correct:0},
+{q:"Voltage unit?",a:["Volt","Watt","Newton","Joule"],correct:0},
+{q:"Power is measured in?",a:["Watt","Volt","Newton","Joule"],correct:0},
+{q:"Gravity pulls objects toward?",a:["Earth","Sun","Moon","Space"],correct:0},
+{q:"Simple machine for lifting?",a:["Pulley","Battery","Wire","Motor"],correct:0},
+{q:"Work = force × ?",a:["Distance","Time","Mass","Energy"],correct:0},
+{q:"Sound travels fastest in?",a:["Solid","Liquid","Gas","Vacuum"],correct:0},
+{q:"Magnetic poles are?",a:["North & South","East & West","Up & Down","Hot & Cold"],correct:0},
+{q:"Mirror reflection is?",a:["Light","Sound","Heat","Force"],correct:0},
+{q:"Electrical current unit?",a:["Ampere","Volt","Watt","Joule"],correct:0},
+{q:"Mass measures amount of?",a:["Matter","Energy","Force","Speed"],correct:0},
+{q:"Energy stored due to position?",a:["Potential","Kinetic","Thermal","Electrical"],correct:0},
+{q:"Newton's First Law is law of?",a:["Inertia","Gravity","Action","Reaction"],correct:0},
+{q:"Device to measure temperature?",a:["Thermometer","Barometer","Speedometer","Voltmeter"],correct:0},
+{q:"Heat travels by?",a:["Conduction","Photosynthesis","Digestion","Fusion"],correct:0},
+{q:"Opposite charges?",a:["Attract","Repel","Explode","Ignore"],correct:0},
+{q:"Unit of frequency?",a:["Hertz","Volt","Watt","Newton"],correct:0},
+{q:"Energy cannot be created or destroyed is law of?",a:["Conservation","Inertia","Motion","Gravity"],correct:0},
+{q:"Force equals mass × ?",a:["Acceleration","Velocity","Energy","Time"],correct:0},
+{q:"Earth’s pull is?",a:["Gravity","Magnetism","Friction","Voltage"],correct:0},
+{q:"Device converting electrical to mechanical?",a:["Motor","Battery","Wire","Switch"],correct:0},
+{q:"Pressure unit?",a:["Pascal","Volt","Watt","Joule"],correct:0},
+{q:"Reflection angle equals?",a:["Angle of incidence","Zero","180°","45°"],correct:0}
+];
+
+
+
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+  return array;
+}
+
+let quiz = shuffle([...questionBank]).slice(0,10);
+let current=0;
+let score=0;
+
+function loadQuestion(){
+  if(current>=quiz.length){ showFinal(); return; }
+
+  document.getElementById("counter").innerText =
+    (current+1) + " / " + quiz.length;
+
+  let q = quiz[current];
+  document.getElementById("question").innerText=q.q;
+
+  let options = shuffle([...q.a]);
+  let correctAnswer = q.a[q.correct];
+  const opts=document.getElementById("options");
+  opts.innerHTML="";
+
+  options.forEach(choice=>{
+    const btn=document.createElement("div");
+    btn.className="option";
+    btn.innerText=choice;
+
+    btn.onclick=function(){
+      if(choice===correctAnswer){ btn.classList.add("correct"); score++; }
+      else{ btn.classList.add("wrong"); }
+
+      setTimeout(()=>{ current++; loadQuestion(); },500);
+    };
+
+    opts.appendChild(btn);
+  });
+}
+
+function showFinal(){
+
+  let savedHigh = parseInt(localStorage.getItem(highScoreKey)) || 0;
+
+  if(score > savedHigh){
+    localStorage.setItem(highScoreKey, score);
+    savedHigh = score;
+  }
+
+  let ranking="";
+  if(score>=9) ranking="🌟 Excellent!";
+  else if(score>=7) ranking="👍 Great Job!";
+  else if(score>=5) ranking="🙂 Good Effort!";
+  else ranking="📘 Keep Practicing!";
+
+  document.body.innerHTML=`
+    <div class="final-screen">
+      <h1>🎉 Good Job! 🎉</h1>
+      <h2>Your Final Score: ${score} / ${quiz.length}</h2>
+      <h2>🏆 High Score: ${savedHigh}</h2>
+      <div class="rank">${ranking}</div>
+      <div class="final-buttons">
+        <button class="retake" onclick="location.reload()">Retake Quiz</button>
+        <button class="home" onclick="window.location.href='science.html'">Go Back to Topics</button>
+      </div>
+    </div>
+  `;
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
